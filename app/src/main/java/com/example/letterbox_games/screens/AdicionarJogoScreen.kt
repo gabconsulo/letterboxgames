@@ -1,0 +1,261 @@
+package com.example.letterbox_games.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+import androidx.compose.ui.tooling.preview.Preview
+
+@Preview(showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun AdicionarJogoScreenPreview() {
+    AdicionarJogoScreen()
+}
+
+private val plataformas = listOf("PC", "PS5", "Switch")
+private val labelsNota = mapOf(
+    1 to "Ruim",
+    2 to "Regular",
+    3 to "Bom",
+    4 to "Muito bom",
+    5 to "Excelente"
+)
+
+@Composable
+fun AdicionarJogoScreen() {
+    var nomeJogo by remember { mutableStateOf("") }
+    var plataformaSelecionada by remember { mutableStateOf("PC") }
+    var notaSelecionada by remember { mutableIntStateOf(5) }
+    var resenha by remember { mutableStateOf("") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF070510), Color(0xFF140E28))
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+        ) {
+            Text(
+                text = "BIBLIOTECA",
+                color = Color(0xFF00F3FF),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Novo jogo",
+                color = Color.White,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            CampoFormulario(label = "Nome do jogo") {
+                TextoDeEntrada(
+                    valor = nomeJogo,
+                    placeholder = "Digite o nome do jogo...",
+                    aoAlterar = { nomeJogo = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            CampoFormulario(label = "Plataforma") {
+                SeletorPlataforma(
+                    plataformaSelecionada = plataformaSelecionada,
+                    aoSelecionar = { plataformaSelecionada = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            CampoFormulario(label = "Sua nota") {
+                SeletorNota(
+                    notaSelecionada = notaSelecionada,
+                    aoSelecionar = { notaSelecionada = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            CampoFormulario(label = "Resenha curta (opcional)") {
+                CampoTextoLongo(
+                    valor = resenha,
+                    placeholder = "O que achou do jogo?",
+                    aoAlterar = { resenha = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = { /* salvar em memória/BD será visto em próximas aulas */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(49.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(Color(0xFF8B5CF6), Color(0xFF00F3FF))
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Salvar jogo",
+                        color = Color(0xFF0D0D26),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CampoFormulario(label: String, conteudo: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = label.uppercase(),
+            color = Color(0xFF9CA3AF),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
+        conteudo()
+    }
+}
+
+@Composable
+private fun TextoDeEntrada(valor: String, placeholder: String, aoAlterar: (String) -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xB3171329))
+            .border(1.dp, Color(0x14FFFFFF), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Text(
+            text = valor.ifEmpty { placeholder },
+            color = if (valor.isEmpty()) Color(0xFF6B7280) else Color.White,
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Composable
+private fun CampoTextoLongo(valor: String, placeholder: String, aoAlterar: (String) -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xB3171329))
+            .border(1.dp, Color(0x14FFFFFF), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Text(
+            text = valor.ifEmpty { placeholder },
+            color = if (valor.isEmpty()) Color(0xFF6B7280) else Color.White,
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Composable
+private fun SeletorPlataforma(plataformaSelecionada: String, aoSelecionar: (String) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        plataformas.forEach { plataforma ->
+            val selecionada = plataforma == plataformaSelecionada
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (selecionada) Color(0xA1221C3A) else Color(0xB3171329))
+                    .border(
+                        width = 1.dp,
+                        color = if (selecionada) Color(0xFF00F3FF) else Color(0x14FFFFFF),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = plataforma,
+                    color = if (selecionada) Color(0xFF00F3FF) else Color(0xFF9CA3AF),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SeletorNota(notaSelecionada: Int, aoSelecionar: (Int) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xB3171329))
+            .border(1.dp, Color(0x14FFFFFF), RoundedCornerShape(12.dp))
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = labelsNota[notaSelecionada] ?: "",
+            color = Color(0xFF00F3FF),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (i in 1..5) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = "Nota $i",
+                    tint = if (i <= notaSelecionada) Color(0xFFFBBF24) else Color(0xFF4B5563),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
