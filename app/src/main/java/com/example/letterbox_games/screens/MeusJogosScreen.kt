@@ -164,7 +164,8 @@ fun MeusJogosScreen() {
 }
 
 @Composable
-private fun GameCard(jogo: JogoJogado) {
+private fun GameCard(jogo: Jogo) {
+    val iniciais = jogo.nome.take(2).uppercase()
     Row(
         modifier = Modifier
             .fillMaxWidth()
