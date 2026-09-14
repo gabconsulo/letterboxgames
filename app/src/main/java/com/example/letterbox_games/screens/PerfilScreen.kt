@@ -49,7 +49,7 @@ private val generosMock = listOf(
 )
 
 @Composable
-fun PerfilScreen() {
+fun PerfilScreen(onNavigateToEdit: () -> Unit = {}) {
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
             .fillMaxSize()
@@ -90,7 +90,7 @@ fun PerfilScreen() {
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = { /* edição de perfil não faz parte deste trabalho */ },
+                onClick = onNavigateToEdit,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),

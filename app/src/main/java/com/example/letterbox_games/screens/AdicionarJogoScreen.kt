@@ -2,35 +2,30 @@ package com.example.letterbox_games.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 import androidx.compose.ui.tooling.preview.Preview
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
 private fun AdicionarJogoScreenPreview() {
-    AdicionarJogoScreen()
+    AdicionarJogoScreen(onBack = {})
 }
 
 private val plataformas = listOf("PC", "PS5", "Switch")
@@ -43,7 +38,7 @@ private val labelsNota = mapOf(
 )
 
 @Composable
-fun AdicionarJogoScreen() {
+fun AdicionarJogoScreen(onBack: () -> Unit) {
     var nomeJogo by remember { mutableStateOf("") }
     var plataformaSelecionada by remember { mutableStateOf("PC") }
     var notaSelecionada by remember { mutableIntStateOf(5) }
@@ -118,7 +113,7 @@ fun AdicionarJogoScreen() {
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = { /* salvar em memória/BD será visto em próximas aulas */ },
+                onClick = onBack,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(49.dp),
@@ -172,10 +167,22 @@ private fun TextoDeEntrada(valor: String, placeholder: String, aoAlterar: (Strin
             .border(1.dp, Color(0x14FFFFFF), RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
-        Text(
-            text = valor.ifEmpty { placeholder },
-            color = if (valor.isEmpty()) Color(0xFF6B7280) else Color.White,
-            fontSize = 14.sp
+        BasicTextField(
+            value = valor,
+            onValueChange = aoAlterar,
+            textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 14.sp),
+            cursorBrush = SolidColor(Color(0xFF00F3FF)),
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { innerTextField ->
+                if (valor.isEmpty()) {
+                    Text(
+                        text = placeholder,
+                        color = Color(0xFF6B7280),
+                        fontSize = 14.sp
+                    )
+                }
+                innerTextField()
+            }
         )
     }
 }
@@ -191,13 +198,26 @@ private fun CampoTextoLongo(valor: String, placeholder: String, aoAlterar: (Stri
             .border(1.dp, Color(0x14FFFFFF), RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
-        Text(
-            text = valor.ifEmpty { placeholder },
-            color = if (valor.isEmpty()) Color(0xFF6B7280) else Color.White,
-            fontSize = 14.sp
+        BasicTextField(
+            value = valor,
+            onValueChange = aoAlterar,
+            textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 14.sp),
+            cursorBrush = SolidColor(Color(0xFF00F3FF)),
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { innerTextField ->
+                if (valor.isEmpty()) {
+                    Text(
+                        text = placeholder,
+                        color = Color(0xFF6B7280),
+                        fontSize = 14.sp
+                    )
+                }
+                innerTextField()
+            }
         )
     }
 }
+
 
 @Composable
 private fun SeletorPlataforma(plataformaSelecionada: String, aoSelecionar: (String) -> Unit) {
@@ -214,6 +234,7 @@ private fun SeletorPlataforma(plataformaSelecionada: String, aoSelecionar: (Stri
                         color = if (selecionada) Color(0xFF00F3FF) else Color(0x14FFFFFF),
                         shape = RoundedCornerShape(12.dp)
                     )
+                    .clickable { aoSelecionar(plataforma) }
                     .padding(12.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -249,10 +270,12 @@ private fun SeletorNota(notaSelecionada: Int, aoSelecionar: (Int) -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             for (i in 1..5) {
                 Icon(
-                    imageVector = Icons.Filled.Star,
+                    imageVector = if (i <= notaSelecionada) Icons.Filled.Star else Icons.Filled.StarBorder,
                     contentDescription = "Nota $i",
                     tint = if (i <= notaSelecionada) Color(0xFFFBBF24) else Color(0xFF4B5563),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { aoSelecionar(i) }
                 )
             }
         }

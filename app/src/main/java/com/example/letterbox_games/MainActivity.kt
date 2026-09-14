@@ -49,8 +49,12 @@ fun AppComTrocaDeTelas() {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
             when (telaAtual) {
-                TelaAtual.MEUS_JOGOS -> MeusJogosScreen()
-                TelaAtual.ADICIONAR_JOGO -> AdicionarJogoScreen()
+                TelaAtual.MEUS_JOGOS -> MeusJogosScreen(
+                    onNavigateToAdicionarJogo = { telaAtual = TelaAtual.ADICIONAR_JOGO }
+                )
+                TelaAtual.ADICIONAR_JOGO -> AdicionarJogoScreen(
+                    onBack = { telaAtual = TelaAtual.MEUS_JOGOS }
+                )
                 TelaAtual.PERFIL -> PerfilScreen()
             }
         }
