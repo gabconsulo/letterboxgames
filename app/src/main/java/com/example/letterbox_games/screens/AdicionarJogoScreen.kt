@@ -68,8 +68,8 @@ fun AdicionarJogoScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
             Text(
@@ -126,6 +126,8 @@ fun AdicionarJogoScreen(
                     aoAlterar = { resenha = it }
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (erroNome) {
                 Text(
@@ -264,7 +266,6 @@ private fun CampoTextoLongo(valor: String, placeholder: String, aoAlterar: (Stri
     }
 }
 
-
 @Composable
 private fun SeletorPlataforma(plataformaSelecionada: String, aoSelecionar: (String) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -327,4 +328,3 @@ private fun SeletorNota(notaSelecionada: Int, aoSelecionar: (Int) -> Unit) {
         }
     }
 }
-
