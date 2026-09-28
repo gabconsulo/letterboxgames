@@ -12,9 +12,16 @@ import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,31 +32,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.letterbox_games.model.Jogo
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
 private fun PerfilScreenPreview() {
-    PerfilScreen()
+    PerfilScreen(emptyList(), "Gabriel", {})
 }
 
 
 data class Estatistica(val icone: ImageVector, val valor: String, val rotulo: String)
 data class GeneroRanking(val posicao: Int, val nome: String)
 
-private val estatisticasMock = listOf(
-    Estatistica(Icons.Filled.EmojiEvents, "12", "Zerados"),
-    Estatistica(Icons.Filled.HourglassEmpty, "340h", "Jogadas"),
-    Estatistica(Icons.Filled.Star, "5 ★", "Nota Média")
-)
-
-private val generosMock = listOf(
-    GeneroRanking(1, "RPG"),
-    GeneroRanking(2, "FPS"),
-    GeneroRanking(3, "Estratégia")
-)
-
 @Composable
-fun PerfilScreen(onNavigateToEdit: () -> Unit = {}) {
+fun PerfilScreen(jogos: List<Jogo>, nome: String, onNomeAlterado: (String) -> Unit) {
+    var mostrarEdicao by remember { mutableStateOf(false) }
+    var nomeRascunho by remember(nome) { mutableStateOf(nome) }
+    val media = if (jogos.isEmpty()) "—" else String.format("%.1f", jogos.map { it.nota }.average())
+    val estatisticas = listOf(
+        Estatistica(Icons.Filled.EmojiEvents, jogos.size.toString(), "Jogos"),
+        Estatistica(Icons.Filled.HourglassEmpty, jogos.count { it.resenha.isNotBlank() }.toString(), "Resenhas"),
+        Estatistica(Icons.Filled.Star, media, "Nota média")
+    )
+    val plataformas = jogos.groupingBy { it.plataforma }.eachCount().entries
+        .sortedByDescending { it.value }
+        .take(3)
+        .mapIndexed { indice, entrada -> GeneroRanking(indice + 1, "${entrada.key} · ${entrada.value}") }
+
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
             .fillMaxSize()
@@ -64,12 +73,12 @@ fun PerfilScreen(onNavigateToEdit: () -> Unit = {}) {
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            CabecalhoPerfil(nome = "Gabriel", membroDesde = "Desde ago 2026")
+            CabecalhoPerfil(nome = nome, membroDesde = "Perfil da biblioteca")
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                estatisticasMock.forEach { estatistica ->
+                estatisticas.forEach { estatistica ->
                     CardEstatistica(estatistica = estatistica, modifier = Modifier.weight(1f))
                 }
             }
@@ -77,7 +86,7 @@ fun PerfilScreen(onNavigateToEdit: () -> Unit = {}) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Gêneros mais jogados",
+                text = "Plataformas mais jogadas",
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
@@ -85,12 +94,19 @@ fun PerfilScreen(onNavigateToEdit: () -> Unit = {}) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            ListaGeneros(generos = generosMock)
+            if (plataformas.isEmpty()) {
+                Text("As plataformas aparecem aqui quando você adicionar jogos.", color = Color(0xFF9CA3AF), fontSize = 13.sp)
+            } else {
+                ListaGeneros(generos = plataformas)
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = onNavigateToEdit,
+                onClick = {
+                    nomeRascunho = nome
+                    mostrarEdicao = true
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -113,6 +129,33 @@ fun PerfilScreen(onNavigateToEdit: () -> Unit = {}) {
                 )
             }
         }
+    }
+
+    if (mostrarEdicao) {
+        AlertDialog(
+            onDismissRequest = { mostrarEdicao = false },
+            title = { Text("Editar perfil") },
+            text = {
+                OutlinedTextField(
+                    value = nomeRascunho,
+                    onValueChange = { nomeRascunho = it },
+                    label = { Text("Nome") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val nomeValido = nomeRascunho.trim()
+                    if (nomeValido.isNotEmpty()) {
+                        onNomeAlterado(nomeValido)
+                        mostrarEdicao = false
+                    }
+                }) { Text("Salvar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarEdicao = false }) { Text("Cancelar") }
+            }
+        )
     }
 }
 

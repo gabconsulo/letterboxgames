@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -21,11 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.letterbox_games.model.Jogo
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
 private fun AdicionarJogoScreenPreview() {
-    AdicionarJogoScreen(onBack = {})
+    AdicionarJogoScreen(onBack = {}, onSave = {})
 }
 
 private val plataformas = listOf("PC", "PS5", "Switch")
@@ -38,11 +41,20 @@ private val labelsNota = mapOf(
 )
 
 @Composable
-fun AdicionarJogoScreen(onBack: () -> Unit) {
-    var nomeJogo by remember { mutableStateOf("") }
-    var plataformaSelecionada by remember { mutableStateOf("PC") }
-    var notaSelecionada by remember { mutableIntStateOf(5) }
-    var resenha by remember { mutableStateOf("") }
+fun AdicionarJogoScreen(
+    onBack: () -> Unit,
+    onSave: (Jogo) -> Unit,
+    jogoExistente: Jogo? = null
+) {
+    var nomeJogo by remember(jogoExistente?.id) { mutableStateOf(jogoExistente?.nome.orEmpty()) }
+    var plataformaSelecionada by remember(jogoExistente?.id) {
+        mutableStateOf(jogoExistente?.plataforma ?: "PC")
+    }
+    var notaSelecionada by remember(jogoExistente?.id) {
+        mutableIntStateOf(jogoExistente?.nota ?: 5)
+    }
+    var resenha by remember(jogoExistente?.id) { mutableStateOf(jogoExistente?.resenha.orEmpty()) }
+    var erroNome by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -56,6 +68,8 @@ fun AdicionarJogoScreen(onBack: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(24.dp)
         ) {
             Text(
@@ -66,7 +80,7 @@ fun AdicionarJogoScreen(onBack: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Novo jogo",
+                text = if (jogoExistente == null) "Novo jogo" else "Editar jogo",
                 color = Color.White,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.ExtraBold
@@ -78,7 +92,10 @@ fun AdicionarJogoScreen(onBack: () -> Unit) {
                 TextoDeEntrada(
                     valor = nomeJogo,
                     placeholder = "Digite o nome do jogo...",
-                    aoAlterar = { nomeJogo = it }
+                    aoAlterar = {
+                        nomeJogo = it
+                        if (it.isNotBlank()) erroNome = false
+                    }
                 )
             }
 
@@ -110,34 +127,63 @@ fun AdicionarJogoScreen(onBack: () -> Unit) {
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            if (erroNome) {
+                Text(
+                    text = "Digite o nome do jogo para continuar.",
+                    color = Color(0xFFFF8A80),
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
-            Button(
-                onClick = onBack,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(49.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(Color(0xFF8B5CF6), Color(0xFF00F3FF))
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(
+                    onClick = onBack,
+                    modifier = Modifier.weight(1f).height(49.dp)
                 ) {
-                    Text(
-                        text = "Salvar jogo",
-                        color = Color(0xFF0D0D26),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text("Cancelar")
+                }
+
+                Button(
+                    onClick = {
+                        val nome = nomeJogo.trim()
+                        if (nome.isBlank()) {
+                            erroNome = true
+                        } else {
+                            onSave(
+                                Jogo(
+                                    id = jogoExistente?.id ?: java.util.UUID.randomUUID().toString(),
+                                    nome = nome,
+                                    plataforma = plataformaSelecionada,
+                                    nota = notaSelecionada,
+                                    resenha = resenha.trim()
+                                )
+                            )
+                        }
+                    },
+                    modifier = Modifier.weight(1f).height(49.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFF8B5CF6), Color(0xFF00F3FF))
+                                ),
+                                shape = RoundedCornerShape(16.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Salvar jogo",
+                            color = Color(0xFF0D0D26),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }

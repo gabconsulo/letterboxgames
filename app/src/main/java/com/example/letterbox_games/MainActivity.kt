@@ -2,6 +2,7 @@ package com.example.letterbox_games
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -10,14 +11,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.mutableStateListOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.letterbox_games.screens.AdicionarJogoScreen
 import com.example.letterbox_games.screens.MeusJogosScreen
 import com.example.letterbox_games.screens.PerfilScreen
+import com.example.letterbox_games.data.RepositorioDeJogos
+import com.example.letterbox_games.model.Jogo
 import com.example.letterbox_games.ui.theme.LetterboxgamesTheme
 
 /**
@@ -43,26 +48,67 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppComTrocaDeTelas() {
-    // Estado que guarda qual tela está visível agora. Começa em MEUS_JOGOS.
+    val context = LocalContext.current
+    val repositorio = remember(context) { RepositorioDeJogos(context) }
+    val jogos = remember(repositorio) {
+        mutableStateListOf<Jogo>().apply { addAll(repositorio.listar()) }
+    }
+    var nomePerfil by remember(repositorio) { mutableStateOf(repositorio.lerNomePerfil()) }
     var telaAtual by remember { mutableStateOf(TelaAtual.MEUS_JOGOS) }
+    var jogoEmEdicao by remember { mutableStateOf<Jogo?>(null) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    BackHandler(enabled = telaAtual == TelaAtual.ADICIONAR_JOGO) {
+        jogoEmEdicao = null
+        telaAtual = TelaAtual.MEUS_JOGOS
+    }
+
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
         Box(modifier = Modifier.weight(1f)) {
             when (telaAtual) {
                 TelaAtual.MEUS_JOGOS -> MeusJogosScreen(
-                    onNavigateToAdicionarJogo = { telaAtual = TelaAtual.ADICIONAR_JOGO }
+                    jogos = jogos,
+                    onNavigateToAdicionarJogo = {
+                        jogoEmEdicao = null
+                        telaAtual = TelaAtual.ADICIONAR_JOGO
+                    },
+                    onEditarJogo = { jogo ->
+                        jogoEmEdicao = jogo
+                        telaAtual = TelaAtual.ADICIONAR_JOGO
+                    },
+                    onExcluirJogo = { jogo ->
+                        jogos.removeAll { it.id == jogo.id }
+                        repositorio.salvar(jogos)
+                    }
                 )
                 TelaAtual.ADICIONAR_JOGO -> AdicionarJogoScreen(
-                    onBack = { telaAtual = TelaAtual.MEUS_JOGOS }
+                    onBack = { telaAtual = TelaAtual.MEUS_JOGOS },
+                    jogoExistente = jogoEmEdicao,
+                    onSave = { jogo ->
+                        val indice = jogos.indexOfFirst { it.id == jogo.id }
+                        if (indice >= 0) jogos[indice] = jogo else jogos.add(0, jogo)
+                        repositorio.salvar(jogos)
+                        jogoEmEdicao = null
+                        telaAtual = TelaAtual.MEUS_JOGOS
+                    }
                 )
-                TelaAtual.PERFIL -> PerfilScreen()
+                TelaAtual.PERFIL -> PerfilScreen(
+                    jogos = jogos,
+                    nome = nomePerfil,
+                    onNomeAlterado = { novoNome ->
+                        nomePerfil = novoNome
+                        repositorio.salvarNomePerfil(novoNome)
+                    }
+                )
             }
         }
 
         // Barra de troca de telas, fixa embaixo
         SeletorDeTelas(
             telaAtual = telaAtual,
-            aoSelecionar = { telaAtual = it }
+            aoSelecionar = {
+                if (it == TelaAtual.ADICIONAR_JOGO) jogoEmEdicao = null
+                telaAtual = it
+            }
         )
     }
 }
